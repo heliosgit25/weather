@@ -5,11 +5,16 @@ city = input("Enter city name: ")
 
 url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
 response = requests.get(url)
+resp_code = response.status_code
+print(resp_code)
 
 data = response.json()
 #print(data.keys())
-#print(data)
+print(data)
 
 temp = data["main"]["temp"]
 feels = data["main"]["feels_like"]
 print(f"Temperature:, {temp}C, But it feels like:, {feels}C")
+
+coordinates = data["coord"]
+print(f"Location of this city is: , {coordinates}")
