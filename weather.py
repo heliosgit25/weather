@@ -1,17 +1,22 @@
+import os
 import json
 import time
 import requests
 from datetime import datetime
 from kafka import KafkaProducer
+from dotenv import load_dotenv
+
+load_dotenv()
 
 city = input("Enter city name: ")
-api_key = "742617a6ce5216e5cbc036849c036c3a"
+api_key = os.getenv("API_KEY")
+#print(api_key)
 
 url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
-response = requests.get(url)
-resp_code = response.status_code
-print(resp_code)
-data = response.json()
+#response = requests.get(url)
+#resp_code = response.status_code
+#print(resp_code)
+#data = response.json()
 #print(data.keys())
 #print(data)
 
@@ -20,7 +25,7 @@ producer = KafkaProducer(
     value_serializer=lambda v: json.dumps(v).encode('utf-8')
 )
 
-def weatherEvent():
+def weatherEvent(data):
     return {
     "city_id": data["id"],
     "city": data["name"],
@@ -32,7 +37,16 @@ def weatherEvent():
 if __name__ == "__main__":
     try:
         while True:
-            event = weatherEvent()
+            response = requests.get(url)
+            code = response.status_code
+            if (code == 200):
+                data = response.json()
+            elif (response.status_code == 401):
+                print("API Key Error, exiting... ")
+                break
+            else:
+                print("Temporary error: ", code)
+            event = weatherEvent(data)
             producer.send("weather-events", event)
             print("\nEvent sent.\n")
             print(f"Weather Data for {event['city']}\n", event)
